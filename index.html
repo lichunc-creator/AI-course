@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 融入課程設計小幫手（TCK／TPCK）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{--navy:#14306b;--ink:#1f2937;--muted:#5b6474;--line:#dfe5ef;--bg:#f5f7fb;
+--c1:#275d71;--c2:#339933;--c3:#c0392b;--c4:#dc8103;--c5:#ad471e;
+--t1:#f26b1d;--t2:#8e2a8c;--t3:#1e9ad6;--t4:#1f4e9c;--t5:#e0a100}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC",system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6}
+header{background:var(--navy);color:#fff;padding:28px 24px 22px}
+header .wrap,main{max-width:1180px;margin:0 auto}
+h1{margin:0;font-size:clamp(24px,3.2vw,34px);font-weight:900}
+.sub{opacity:.85;margin-top:4px}
+main{padding:24px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 22px}
+.steps span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:14px;color:var(--muted)}
+.steps span.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:20px}
+.card h2{margin:0 0 12px;font-size:20px;color:var(--navy)}
+.drop{border:2px dashed #a8b6d1;border-radius:12px;padding:30px;text-align:center;cursor:pointer;background:#fafcff}
+.drop.over{background:#eef3fb;border-color:var(--navy)}
+.drop b{color:var(--navy)}
+textarea,input[type=text],select{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+textarea{min-height:110px;resize:vertical}
+label{font-weight:700;display:block;margin:14px 0 6px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:11px 20px;cursor:pointer;background:var(--navy);color:#fff}
+button.ghost{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.status{color:var(--muted);font-size:14px}
+.err{color:#b42318}
+.info{display:grid;grid-template-columns:120px 1fr;gap:6px 14px;font-size:15px}
+.info dt{font-weight:700;color:var(--muted)}.info dd{margin:0}
+.units{display:flex;flex-wrap:wrap;gap:8px}
+.units button{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:500;padding:7px 14px}
+.units button.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+.slide{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;margin-bottom:22px}
+.slide h3{margin:0;font-size:clamp(22px,2.6vw,30px);font-weight:900;color:var(--navy)}
+.bar{display:inline-block;background:var(--navy);color:#fff;font-weight:700;padding:6px 16px;margin:10px 0 8px}
+.intro{color:#333;margin:4px 0 16px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media(max-width:980px){.grid5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid5{grid-template-columns:1fr}}
+.col{border:2px solid var(--k);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;background:#f7f9fc}
+.col .hd{background:var(--k);color:#fff;font-weight:700;text-align:center;padding:10px 6px;font-size:17px}
+.col .bd{padding:12px 14px;flex:1;font-size:15px;white-space:pre-wrap}
+.col .no{background:var(--k);color:#fff;font-weight:900;text-align:center;font-size:24px;padding:4px}
+.core{border:2px solid var(--navy);background:#eef3fb;border-radius:10px;padding:14px 18px;margin-top:16px;font-weight:700;color:var(--navy)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 10px;vertical-align:top;text-align:left}
+th{background:#eef3fb;color:var(--navy)}
+.pill{display:inline-block;background:#eef3fb;color:var(--navy);border-radius:6px;padding:1px 8px;font-size:13px;font-weight:700}
+pre.prompt{white-space:pre-wrap;background:#0f1d3d;color:#e7ecf7;padding:16px;border-radius:10px;font-family:inherit;font-size:14px}
+.hidden{display:none}
+.note{font-size:13px;color:var(--muted)}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid #c7d2e6;border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>AI 融入課程設計小幫手</h1>
+<div class="sub">上傳教學計畫表 → 選單元 → 自動產出 TCK／TPCK 規劃與評量建議（給沒有 AI 背景的老師）</div>
+</div></header>
+<main>
+<div class="card" style="background:#fff8e6;border-color:#f0c36a;padding:16px 20px">
+<b style="color:#8a5a00">第一次使用請先看這裡</b>
+<ol style="margin:8px 0 0;padding-left:22px">
+<li>請先到 <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> 註冊並登入 Claude 帳號（免費版即可），再回到這個連結。</li>
+<li>第一次按「分析課程」時，會跳出詢問是否允許此頁使用 Claude，請按「允許」。</li>
+<li>每產生一份規劃約使用 2 次 Claude；免費版額度較少，若顯示額度用完，請稍後再試。</li>
+</ol></div>
+<div class="steps" id="steps"><span class="on">① 上傳教學計畫</span><span>② 確認課程與選單元</span><span>③ 產生 TCK／TPCK 與評量</span></div>
+
+<section class="card" id="s1">
+<h2>① 上傳教學計畫表</h2>
+<div class="drop" id="drop"><b>點這裡選檔，或把檔案拖進來（可一次選多個）</b><br><span class="note">例如：教學計畫表＋教學進度表、課程大綱＋評分說明。支援 PDF、Word（.docx）、文字檔，最多 5 個；也可以直接在下方貼上</span></div>
+<input type="file" id="file" accept=".pdf,.docx,.txt,.md" multiple class="hidden">
+<label for="raw">教學計畫內容（讀取後會顯示在這裡，可自行修改）</label>
+<textarea id="raw" placeholder="例如：科目名稱、課程目標、課程大綱、教學方法、評分標準……"></textarea>
+<div class="actions">
+<button id="analyze">分析課程</button>
+<button class="ghost" id="clear">清空內容</button>
+<button class="ghost" id="demo">用範例試試（內外科護理學二）</button>
+<span class="status" id="st1"></span>
+</div>
+<p class="note">檔案只在你的瀏覽器中讀取；分析時會把文字內容交給 Claude 處理。</p>
+</section>
+
+<section class="card hidden" id="s2">
+<h2>② 確認課程與選擇單元</h2>
+<dl class="info" id="info"></dl>
+<label>選擇要融入 AI 的單元</label>
+<div class="units" id="units"></div>
+<div class="row">
+<div><label for="concept">想聚焦的概念（選填）</label><input type="text" id="concept" placeholder="例如：心臟後負荷、高血糖危象的處置"></div>
+<div><label for="time">這次活動可用的課堂時間</label>
+<select id="time"><option>1 節（50 分鐘）</option><option selected>2 節（100 分鐘）</option><option>3 節以上／跨週</option></select></div>
+</div>
+<div class="row">
+<div><label for="tool">學生可用的 AI 工具</label>
+<select id="tool"><option>ChatGPT／Gemini 等通用聊天機器人</option><option>老師自建的教學機器人（GPTs、Gem）</option><option>學生不直接使用，只由老師在課堂示範</option></select></div>
+<div><label for="extra">其他想法或限制（選填）</label><input type="text" id="extra" placeholder="例如：想用分組、學生手機不足、要配合期中報告"></div>
+</div>
+<div class="actions"><button id="gen">產生 TCK／TPCK 規劃</button><span class="status" id="st2"></span></div>
+</section>
+
+<section class="hidden" id="s3">
+<div class="actions" style="margin:0 0 16px"><button id="copy">複製全部內容</button><button class="ghost" id="regen">換一個版本</button><span class="status" id="st3"></span></div>
+<div id="out"></div>
+</section>
+</main>
+<script>
+const SAMPLE = "新生醫護管理專科學校一百一十四學年度 第二學期 教學計劃表                                             年 月修正\n115 02\n科目名稱                 中文 內外科護理學(二)                                   英文 Medical Surgical Nursing Ⅱ\n學制 日間部五專                                必選修 必修\n開課                科系 日五專護理科                               學分數 4                    授課教師         （授課教師）\n班別 五專護理312班                            全半學年 半\n縱向銜接             橫向統合:本課程係透過身體評估及實驗、藥理學等之運作，架構課程實體，故前述各項係為課程內之橫向連結，於授課時應同步進行，以收整合之效。\n橫向統合             縱向銜接:本課程係以解剖生理學及實驗、基本護理學暨實驗及實習、醫護英文、病理學、微生物免疫學、藥理學、營養學等為基礎，需先完成前述課程修業，方能銜接內外科護理\n學實習、內外科護理學進階等課程。\n本課程涵蓋泌尿、急症、內分泌、心臟血管及神經系統常見疾病與護理。針對常見的成人疾病，了解病理生理變化及其影響，並從身、心、靈、社會各層面探討與該系統相關的主\n課程摘要             要健康問題，期使學生具有內外科護理的基本能力。課程中透過案例分析討論的過程，訓練學生資料的分析與統整能力；作業的部份希望培養學生問題發現與改善、尊重生命與關\n懷、敬業樂群的能力，期使同學能自我成長\n1.能認識常見內外科疾病的症狀、病理變化、檢查及治療。 2.能了解疾病對個人生理、心理、社會各層面的影響 。 3.能正確應用護理過程，擬定合宜的護理措施 。 4.能主動查閱護\n課程目標             理相關的文獻。 5.能了解護理人員的職責及團隊合作的重要性。 6.能說出關懷行為的重要，及如何展現關懷 。\n本課程涵蓋骨骼肌肉系統(骨折、牽引、關節炎及關節置換術)、心肺復甦術、泌尿系統(泌尿系統解剖生理、評估、檢查、 泌尿道感染、尿失禁、尿路結石之護理等)、內分泌系統\n(尿崩症、抗利尿激素分泌不當症候群之護理等)、心臟血管系統(心臟血管系統解剖生理、護理評估及診斷檢查、充血性心臟衰竭、冠狀動脈疾病、周邊血管疾病、風溼熱、風濕性\n課程大綱             心臟病、瓣膜性心臟病、發炎性心臟病、心臟外科手術)及神經系統疾病(解剖生理、護理評估及診斷檢查、腦血管意外、腦腫瘤、巴金森氏症、肌無力症、癲癇、椎間盤突出症、神\n經外科手術) 。\n□講述法 □討論法 □影片教學 □實作教學 □業界專家協同 ■其它(請說明)\n1.講述法:配合使用PowerPoint，將各單元的理論基礎與實務運用傳授 給學生。 2.多媒體教學：運用多媒體教學方式，以生動圖片、影片吸引學生注意力，提高學習成效。 3.問答\n教學方法             法：教師提出問題，學生經由分析、整合、推理、歸納過程來思考解答 。 4.案例分析：透過概念圖，確立健康問題與相關原因，運用基礎醫學知識進行問題之批判性思考。 5.討論\n法:提出疾病原因或病理變化相關問題，再藉由老師與學生之間的分析與判斷過程中學習。\n評量方式                     百分比      評量標準詳細說明\n期中                       25 %     紙本測驗 實作 報告 報告 其他\n評分標準             期末                       25 %     紙本測驗 實作 報告 報告 其他\n平時                       35 %\n作業                       15 %\n主要教材                                          書名        作者              出版者      冊次       年次        版次\n最新內外科護理學                          廖張京棣總校閱     永大出版社         上下冊     2024       7版\n參考用書                              書名                    作者             出版者      冊次        年次        版次\n課程類別             □創新教學課程 □創新創業課程 □程式設計課程 □STEM領域課程 ■五專產業核心技能培育課程計畫 □技優領航計畫 □技專校院下世代人才培育課程 □教學實踐研究計畫 □其他\n□無 □消除貧窮 □終止飢餓 □良好健康與社會福利 ■優質教育 □性別平等 □清潔飲水與衛生設施 □經濟適用的清潔能源 □有尊嚴的工作與經濟成長 □產業、創新和基礎設施 □減少國\nSDGs           內及國家間不平等 □永續發展的市鎮規畫 □確保永續消費和生產模式 □氣候行動 □保育與維護海洋資源 □保育及維護生態領地 □和平、正義與健全的司法 □促進目標實現的夥伴關\n係\n■表示研究日，●表示進修日，★表示office hours\n節次                                一     二       三          四          五           六             日\n00                                                     ★";
+const $ = id => document.getElementById(id);
+let course = null, unit = null, plan = null, sampleFn = null, busy = false;
+const TCK_HEADS = ["內容知識","傳統呈現的困難","科技呈現","AI 教學機器人","使用規範"];
+const TCK_COL = ["--t1","--t2","--t3","--t4","--t5"];
+const TPCK_HEADS = ["確認內容知識","確認目標","拆解步驟","比較與批判","AI 應用與評量"];
+const TPCK_COL = ["--c1","--c2","--c3","--c4","--c5"];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+(async () => { try { sampleFn = await claude.use("sample"); } catch(e) { sampleFn = null; }
+  if (!sampleFn) { $("st1").innerHTML = '<span class="err">目前的檢視環境無法呼叫 Claude，請在 claude.ai 開啟此頁。</span>'; } })();
+
+function stepOn(n){ [...$("steps").children].forEach((s,i)=>s.classList.toggle("on", i===n-1)); }
+
+// ---------- file reading ----------
+const drop = $("drop");
+drop.onclick = () => $("file").click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files.length) readFiles(e.dataTransfer.files); };
+$("file").onchange = e => { if (e.target.files.length) readFiles(e.target.files); e.target.value = ""; };
+
+async function extract(f){
+  let text = "";
+  const name = f.name.toLowerCase();
+  if (name.endsWith(".pdf")) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+    for (let p = 1; p <= Math.min(pdf.numPages, 30); p++) {
+      const c = await (await pdf.getPage(p)).getTextContent();
+      let line = "", lastY = null;
+      for (const it of c.items) { const y = it.transform[5]; if (lastY !== null && Math.abs(y-lastY) > 3) { text += line.trim() + "\n"; line = ""; } line += it.str + " "; lastY = y; }
+      text += line.trim() + "\n";
+    }
+  } else if (name.endsWith(".docx")) {
+    text = (await mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() })).value;
+  } else { text = await f.text(); }
+  text = text.replace(/[ \t]+/g, " ").replace(/\n{2,}/g, "\n").trim();
+  if (text.length < 30) throw new Error(f.name + " 讀不到文字，可能是掃描圖檔，請改用貼上文字。");
+  return text;
+}
+async function readFiles(list){
+  const files = [...list].slice(0, 5);
+  const parts = [], errs = [];
+  for (const f of files) {
+    $("st1").innerHTML = '<span class="spin"></span>讀取 ' + esc(f.name) + ' 中…';
+    try { parts.push("【檔案：" + f.name + "】\n" + await extract(f)); } catch (e) { errs.push(esc(e.message || e)); }
+  }
+  if (parts.length) {
+    const cur = $("raw").value.trim();
+    const add = parts.join("\n\n");
+    $("raw").value = (cur && cur !== SAMPLE ? cur + "\n\n" : "") + add;
+    $("raw").value = $("raw").value.slice(0, 20000);
+  }
+  const ok = parts.length ? "已讀取 " + parts.length + " 個檔案，內容已放在下方（可再加檔案或修改），完成後請按「分析課程」。" : "";
+  $("st1").innerHTML = ok + (errs.length ? '<br><span class="err">' + errs.join("<br>") + '</span>' : "") + (list.length > 5 ? '<br><span class="err">一次最多 5 個檔案，其餘未讀取。</span>' : "");
+}
+$("clear").onclick = () => { $("raw").value = ""; $("st1").textContent = "已清空。"; };
+$("demo").onclick = () => { $("raw").value = SAMPLE; $("st1").textContent = "已放入範例，請按「分析課程」。"; };
+
+// ---------- AI calls ----------
+async function askJSON(prompt){
+  if (!sampleFn) throw new Error("目前無法呼叫 Claude。");
+  try { return await sampleFn.json(prompt, { modelTier: "default" }); }
+  catch (e) {
+    if (e && e.code === "not_granted") throw new Error("需要允許此頁使用 Claude 才能分析。");
+    if (e && e.code === "rate_limited") throw new Error("使用太頻繁，請稍候一分鐘再試。");
+    throw new Error((e && e.message) || "分析失敗，請再試一次。");
+  }
+}
+
+$("analyze").onclick = async () => {
+  const raw = $("raw").value.trim();
+  if (raw.length < 30) { $("st1").innerHTML = '<span class="err">請先上傳檔案或貼上教學計畫內容。</span>'; return; }
+  if (busy) return; busy = true; $("analyze").disabled = true;
+  $("st1").innerHTML = '<span class="spin"></span>Claude 正在閱讀課程內容…';
+  try {
+    course = await askJSON(`你是台灣技專校院的課程設計顧問。以下是教學計畫相關文件的文字（可能是多個檔案，以【檔案：…】分隔，排版可能凌亂），請綜合所有檔案整理。請整理成 JSON，全部用繁體中文：
+{"course":"科目名稱","program":"學制／科系／班別（若有）","credits":"學分（若有）","objectives":["課程目標，逐條"],"methods":"目前的教學方法（一句話摘要）","grading":[{"item":"評量項目","pct":"百分比"}],"units":[{"name":"單元名稱（簡短）","topics":"此單元涵蓋的主題，用頓號分隔"}]}
+units 請依「課程大綱」拆成 4–12 個可獨立設計教學活動的單元（例如依身體系統或章節）。找不到的欄位填空字串或空陣列。只輸出 JSON。
+
+教學計畫內容：
+"""${raw.slice(0, 18000)}"""`);
+    renderCourse();
+    $("s2").classList.remove("hidden"); stepOn(2);
+    $("st1").textContent = "分析完成。";
+    $("s2").scrollIntoView({ behavior: "smooth" });
+  } catch (e) { $("st1").innerHTML = '<span class="err">' + esc(e.message) + '</span>'; }
+  busy = false; $("analyze").disabled = false;
+};
+
+function renderCourse(){
+  const g = (course.grading||[]).map(x => esc(x.item) + " " + esc(x.pct)).join("、");
+  $("info").innerHTML = `<dt>科目</dt><dd>${esc(course.course)}</dd><dt>對象</dt><dd>${esc(course.program)}${course.credits ? "｜" + esc(course.credits) + " 學分" : ""}</dd>
+  <dt>課程目標</dt><dd>${(course.objectives||[]).map(esc).join("<br>")}</dd><dt>現行評分</dt><dd>${g || "（未列出）"}</dd>`;
+  const box = $("units"); box.innerHTML = ""; unit = null;
+  (course.units||[]).forEach(u => {
+    const b = document.createElement("button"); b.textContent = u.name; b.title = u.topics || "";
+    b.onclick = () => { unit = u; [...box.children].forEach(x => x.classList.remove("sel")); b.classList.add("sel"); };
+    box.appendChild(b);
+  });
+  const o = document.createElement("button"); o.textContent = "＋ 自行輸入單元";
+  o.onclick = () => { const n = $("concept").value.trim(); unit = { name: n || "自訂單元", topics: n }; [...box.children].forEach(x => x.classList.remove("sel")); o.classList.add("sel"); if (!n) $("concept").focus(); };
+  box.appendChild(o);
+}
+
+async function generate(){
+  if (!unit) { $("st2").innerHTML = '<span class="err">請先選一個單元。</span>'; return; }
+  if (busy) return; busy = true; $("gen").disabled = true; $("regen").disabled = true;
+  $("st2").innerHTML = $("st3").innerHTML = '<span class="spin"></span>Claude 正在設計教學規劃（約 30–60 秒）…';
+  const ctx = `科目：${course.course}；對象：${course.program}
+課程目標：${(course.objectives||[]).join("；")}
+現行教學方法：${course.methods}
+現行評分：${(course.grading||[]).map(x=>x.item+" "+x.pct).join("、")}
+選定單元：${unit.name}（${unit.topics||""}）
+老師想聚焦的概念：${$("concept").value.trim() || "請從單元中挑一個抽象、學生常卡關、適合用科技視覺化的核心概念"}
+課堂時間：${$("time").value}
+學生可用的 AI：${$("tool").value}
+其他限制：${$("extra").value.trim() || "無"}`;
+  try {
+    plan = await askJSON(`你是協助「沒有 AI 背景的大專教師」把生成式 AI 融入課程的教學設計顧問，熟悉 TPACK 架構。
+設計原則：AI 是輔助學習而非取代學習；先讓學生自己思考，再與 AI 比較、批判、查證；學生必須對 AI 的使用過程與結果負責；正確使用 AI 本身也是評量的一部分。
+
+請根據以下課程資訊，針對一個具體核心概念，產出可直接上課使用的規劃。語氣具體、可操作，用台灣繁體中文與該領域的正確專業術語；每個欄位 40–70 字，不要空泛口號。
+
+${ctx}
+
+只輸出以下 JSON：
+{"concept":"聚焦的核心概念（短）",
+"tck":{"subtitle":"一句話主張，例：用科技把看不見的阻力變成看得見的變化","intro":"一句話說明 TCK 在這個概念上要解決什麼","cards":["內容知識：此概念的定義與關鍵因子","傳統呈現的困難：為何只用講述或課本學生難懂","科技呈現：具體用哪種科技／模擬／動畫／圖像化呈現，學生做什麼操作、看到什麼變化","AI 教學機器人：AI 扮演的角色、怎麼用比喻解說、如何出題自評","使用規範：哪些資訊必須查證、以什麼為依據、如何註明 AI 使用"],"core":"核心觀點一句話"},
+"tpck":{"subtitle":"一句話","intro":"一句話說明情境與流程（用一個貼近臨床或實務的個案）","steps":["01 確認內容知識：本次要學會的知識點","02 確認目標：可觀察、可評量的學習目標","03 拆解步驟：個案任務的推理步驟，用 → 串接","04 比較與批判：學生先獨立完成，再如何與 AI 比對、查證、修正","05 AI 應用與評量：學生要繳交什麼證據、AI 使用如何納入評分"],"core":"核心觀點一句話"},
+"flow":[{"time":"分鐘數","activity":"課堂活動","ai":"此時 AI 的角色（或不使用）"}],
+"assessment":{"weights":[{"item":"評分項目","pct":"佔本活動百分比","evidence":"學生要交的具體證據"}],"rubric":[{"criterion":"評分向度","excellent":"優秀表現描述","adequate":"合格表現描述","needs":"待加強表現描述"}],"fit":"如何放進現行評分標準（指出放在平時、作業、期中或期末的哪一項及建議比例）"},
+"tutor_prompt":"老師可直接貼給 ChatGPT／GPTs 的教學機器人設定指令，150–250 字，要求 AI 用提問引導、不直接給完整答案、提醒學生查證",
+"student_task":"發給學生的任務說明，含情境、步驟與繳交內容，120–200 字",
+"pitfalls":["老師實施時要注意的風險或常見錯誤，3 條"]}
+weights 合計 100%；rubric 3–4 個向度，其中一個必須是「AI 使用與查證」；flow 依課堂時間排 4–6 段。`);
+    renderPlan();
+    $("s3").classList.remove("hidden"); stepOn(3);
+    $("st2").textContent = "完成，結果在下方。"; $("st3").textContent = "";
+    $("s3").scrollIntoView({ behavior: "smooth" });
+  } catch (e) { $("st2").innerHTML = $("st3").innerHTML = '<span class="err">' + esc(e.message) + '</span>'; }
+  busy = false; $("gen").disabled = false; $("regen").disabled = false;
+}
+$("gen").onclick = generate; $("regen").onclick = generate;
+
+const LABELS = [...TCK_HEADS, ...TPCK_HEADS, "傳統呈現困難", "AI 應用", "AI應用", "AI 教學機器人"];
+const stripLabel = s => { let t = String(s||"").replace(/^\s*0?\d\s*/, ""); for (const L of LABELS) { const m = t.match(new RegExp("^" + L.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*[：:]\\s*")); if (m) return t.slice(m[0].length); } return t; };
+
+function renderPlan(){
+  const p = plan, t = p.tck || {}, q = p.tpck || {}, a = p.assessment || {};
+  const cols = (heads, bodies, vars, nums) => heads.map((h,i) => `<div class="col" style="--k:var(${vars[i]})"><div class="hd">${h}</div><div class="bd">${esc(stripLabel((bodies||[])[i]))}</div><div class="no">${nums[i]}</div></div>`).join("");
+  $("out").innerHTML = `
+  <div class="slide"><h3>TCK 實例：${esc(p.concept)}</h3><div class="bar">${esc(t.subtitle)}</div><p class="intro">${esc(t.intro)}</p>
+  <div class="grid5">${cols(TCK_HEADS, t.cards, TCK_COL, ["1","2","3","4","5"])}</div><div class="core">核心觀點：${esc(t.core)}</div></div>
+
+  <div class="slide"><h3>TPCK 實例：${esc(p.concept)}的課程設計</h3><div class="bar">${esc(q.subtitle)}</div><p class="intro">${esc(q.intro)}</p>
+  <div class="grid5">${cols(TPCK_HEADS, q.steps, TPCK_COL, ["01","02","03","04","05"])}</div><div class="core">核心觀點：${esc(q.core)}</div></div>
+
+  <div class="card"><h2>課堂流程</h2><table><tr><th style="width:110px">時間</th><th>課堂活動</th><th>AI 的角色</th></tr>
+  ${(p.flow||[]).map(f=>`<tr><td>${esc(f.time)}</td><td>${esc(f.activity)}</td><td>${esc(f.ai)}</td></tr>`).join("")}</table></div>
+
+  <div class="card"><h2>評量設計</h2>
+  <table><tr><th>評分項目</th><th style="width:90px">比例</th><th>學生要交的證據</th></tr>
+  ${(a.weights||[]).map(w=>`<tr><td>${esc(w.item)}</td><td>${esc(w.pct)}</td><td>${esc(w.evidence)}</td></tr>`).join("")}</table>
+  <h2 style="margin-top:20px">評分規準（Rubric）</h2>
+  <table><tr><th>向度</th><th>優秀</th><th>合格</th><th>待加強</th></tr>
+  ${(a.rubric||[]).map(r=>`<tr><td><b>${esc(r.criterion)}</b></td><td>${esc(r.excellent)}</td><td>${esc(r.adequate)}</td><td>${esc(r.needs)}</td></tr>`).join("")}</table>
+  <p><span class="pill">放進現行評分</span> ${esc(a.fit)}</p></div>
+
+  <div class="card"><h2>教學機器人設定指令 <span class="note">（貼到 ChatGPT 或 GPTs 的指令欄）</span></h2>
+  <pre class="prompt" id="tp">${esc(p.tutor_prompt)}</pre><button class="ghost" id="copytp">複製指令</button></div>
+
+  <div class="card"><h2>學生任務單</h2><p style="white-space:pre-wrap">${esc(p.student_task)}</p></div>
+
+  <div class="card"><h2>實施提醒</h2><ul>${(p.pitfalls||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+  <p class="note">以上內容由 AI 產生，請老師依專業判斷審閱，特別是醫療數值、藥物與處置相關內容須以教科書或臨床指引為準。</p></div>`;
+  $("copytp").onclick = () => copyText(p.tutor_prompt, $("copytp"));
+}
+
+function planText(){
+  const p = plan, t = p.tck||{}, q = p.tpck||{}, a = p.assessment||{};
+  return [`【${course.course}｜${unit.name}】聚焦概念：${p.concept}`, "",
+  `■ TCK 實例：${p.concept}`, t.subtitle, t.intro, ...TCK_HEADS.map((h,i)=>`${i+1}. ${h}：${stripLabel((t.cards||[])[i])}`), "核心觀點："+t.core, "",
+  `■ TPCK 實例：${p.concept}的課程設計`, q.subtitle, q.intro, ...TPCK_HEADS.map((h,i)=>`0${i+1} ${h}：${stripLabel((q.steps||[])[i])}`), "核心觀點："+q.core, "",
+  "■ 課堂流程", ...(p.flow||[]).map(f=>`${f.time}｜${f.activity}｜AI：${f.ai}`), "",
+  "■ 評量設計", ...(a.weights||[]).map(w=>`${w.item} ${w.pct}：${w.evidence}`), "",
+  "■ 評分規準", ...(a.rubric||[]).map(r=>`${r.criterion}｜優秀：${r.excellent}｜合格：${r.adequate}｜待加強：${r.needs}`), "放進現行評分："+a.fit, "",
+  "■ 教學機器人設定指令", p.tutor_prompt, "", "■ 學生任務單", p.student_task, "", "■ 實施提醒", ...(p.pitfalls||[]).map(x=>"・"+x)].join("\n");
+}
+async function copyText(s, btn){
+  const old = btn.textContent;
+  try { await navigator.clipboard.writeText(s); btn.textContent = "已複製！"; }
+  catch(e){ btn.textContent = "無法複製，請手動選取"; }
+  setTimeout(()=>btn.textContent = old, 2000);
+}
+$("copy").onclick = () => copyText(planText(), $("copy"));
+</script>
+</body></html>
